@@ -9,41 +9,24 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with DefaultLifecyclerAwareState {
-  final _resumeCount = ValueNotifier(0);
-  final _pauseCount = ValueNotifier(0);
+class _LoginScreenState extends State<LoginScreen> with DefaultLifecyclerAware {
+  var _resumeCount = 0;
+  var _pauseCount = 0;
 
   @override
   void onResume(Route? previousRoute) {
     super.onResume(previousRoute);
-    _resumeCount.value += 1;
-    if (previousRoute != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("Hello"),
-              content: const Text("Welcome back to login screen"),
-              actionsAlignment: MainAxisAlignment.center,
-              actions: [
-                FilledButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Close"),
-                ),
-              ],
-            );
-          },
-        );
-      });
-    }
+    setState(() {
+      _resumeCount += 1;
+    });
   }
 
   @override
   void onPause(Route? nextRoute) {
     super.onPause(nextRoute);
-    _pauseCount.value += 1;
+    setState(() {
+      _pauseCount += 1;
+    });
   }
 
   @override
@@ -53,25 +36,14 @@ class _LoginScreenState extends State<LoginScreen>
       body: Center(
         child: Column(
           children: [
-            ValueListenableBuilder(
-              valueListenable: _resumeCount,
-              builder: (context, value, child) {
-                return child ?? Text("Resume count: $value");
-              },
-            ),
-            const SizedBox(height: 8),
-            ValueListenableBuilder(
-              valueListenable: _pauseCount,
-              builder: (context, value, child) {
-                return child ?? Text("Pause  count: $value");
-              },
-            ),
-            const SizedBox(height: 16),
+            Text("Resume count: $_resumeCount"),
+            Text("Pause  count: $_pauseCount"),
             FilledButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, Routes.home);
-                },
-                child: const Text("Login")),
+              onPressed: () {
+                Navigator.pushNamed(context, Routes.home);
+              },
+              child: const Text("Login"),
+            ),
           ],
         ),
       ),

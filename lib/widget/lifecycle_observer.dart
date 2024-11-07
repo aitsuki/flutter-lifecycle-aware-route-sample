@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 abstract mixin class LifecycleAware {
@@ -82,7 +83,7 @@ class LifecycleObserver<R extends Route<dynamic>> extends NavigatorObserver {
   }
 }
 
-mixin DefaultLifecyclerAwareState<T extends StatefulWidget> on State<T>
+mixin DefaultLifecyclerAware<T extends StatefulWidget> on State<T>
     implements LifecycleAware {
   @override
   void didChangeDependencies() {
@@ -104,5 +105,82 @@ mixin DefaultLifecyclerAwareState<T extends StatefulWidget> on State<T>
   @override
   void onPause(Route? nextRoute) {
     debugPrint("onPause ${ModalRoute.settingsOf(context)?.name}");
+  }
+}
+
+class PageHost extends InheritedWidget {
+  const PageHost({super.key, required this.currentIndex, required super.child});
+
+  final ValueListenable<int> currentIndex;
+
+  @override
+  bool updateShouldNotify(PageHost oldWidget) {
+    return oldWidget.currentIndex != currentIndex;
+  }
+
+  static PageHost of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<PageHost>()!;
+  }
+}
+
+abstract class PageState<T extends StatefulWidget> extends State<T>
+    with DefaultLifecyclerAware, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  abstract int pageIndex;
+
+  var _isShowing = false;
+  late final ValueListenable<int> _currentIndex;
+
+  void _onPageChanged() {
+    final index = _currentIndex.value;
+    if (index == pageIndex) {
+      _isShowing = true;
+      onPageResume();
+    } else if (_isShowing) {
+      _isShowing = false;
+      onPagePause();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) {
+        _currentIndex = PageHost.of(context).currentIndex;
+        _currentIndex.addListener(_onPageChanged);
+        _onPageChanged();
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _currentIndex.removeListener(_onPageChanged);
+    super.dispose();
+  }
+
+  @override
+  void onResume(Route? previousRoute) {
+    if (_isShowing) {
+      onPageResume();
+    }
+  }
+
+  @override
+  void onPause(Route? nextRoute) {
+    if (_isShowing) {
+      onPagePause();
+    }
+  }
+
+  void onPageResume() {
+    debugPrint("onPageResume $pageIndex");
+  }
+
+  void onPagePause() {
+    debugPrint("onPagePause $pageIndex");
   }
 }

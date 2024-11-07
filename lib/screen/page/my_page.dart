@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lifecyclesample/widget/lifecycle_observer.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -7,11 +8,24 @@ class MyPage extends StatefulWidget {
   State<MyPage> createState() => _MyPageState();
 }
 
-class _MyPageState extends State<MyPage> {
+class _MyPageState extends PageState<MyPage> {
+  @override
+  int pageIndex = 2;
+
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text("My"),
+    super.build(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("My"),
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Logout"),
+          ),
+        ],
+      ),
     );
   }
 }
